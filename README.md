@@ -1,3 +1,4 @@
+![AWS](https://img.shields.io/badge/AWS-Cloud-orange)
 # AWS EC2 Terraform Project
 
 ## Overview
