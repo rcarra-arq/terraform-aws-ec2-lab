@@ -1,5 +1,6 @@
 ![AWS](https://img.shields.io/badge/AWS-Cloud-orange)
-# AWS EC2 Terraform Project
+
+# *AWS EC2 Terraform Project*
 
 ## Overview
 
@@ -9,11 +10,11 @@ The goal was to provision an Amazon EC2 instance on AWS using Terraform, automat
 
 ## Technologies Used
 
-* AWS EC2
-* Terraform
-* Linux
-* SSH
-* Git/GitHub
+* [x] AWS EC2
+* [x] Terraform
+* [x] Linux
+* [x] SSH
+* [x] Git/GitHub
 
 ## Architecture
 
