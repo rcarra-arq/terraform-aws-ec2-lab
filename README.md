@@ -61,7 +61,9 @@ During this project I practiced:
 * Core Terraform commands
 * Basic AWS resource management
 
-# Projeto Terraform AWS EC2
+---
+
+# *Projeto Terraform AWS EC2 (PT/BR)*
 
 ## Visão Geral
 
