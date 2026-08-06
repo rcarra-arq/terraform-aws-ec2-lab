@@ -52,7 +52,7 @@ terraform apply     # create the infrastructure
 terraform destroy   # remove the infrastructure (important for cost control)
 ```
 
-## Learning Outcomes
+## To remember:
 
 During this project I practiced:
 
@@ -115,7 +115,7 @@ terraform apply     # cria a infraestrutura
 terraform destroy   # remove a infraestrutura (importante para controle de custos)
 ```
 
-### Aprendizados
+### Para guardar:
 
 Durante este projeto pratiquei:
 
