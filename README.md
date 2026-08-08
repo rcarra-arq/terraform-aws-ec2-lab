@@ -8,42 +8,46 @@
 
 ## Overview
 
-This project was developed as part of my Cloud Computing and Infrastructure as
-Code (IaC) learning journey. The goal was to provision an Amazon EC2 instance on
-AWS using Terraform, automating infrastructure deployment through code.
+This project started from a simple curiosity: instead of building everything by
+clicking through the AWS console in the lab, what would it be like to do it in
+code? So I built a first, deliberately minimal version — just to understand the
+process of working with Infrastructure as Code (IaC), a topic I'm genuinely
+interested in learning.
 
-## Technologies Used
+## The evolution — from hardcoded to reusable
 
-- AWS EC2
-- Terraform
-- Linux
-- SSH
-- Git / GitHub
+Revisiting it a few months later, I realized it wasn't just simple — it wasn't
+reusable at all. It was hardcoded, frozen in time. So I refactored it with
+variables to turn it into something that can actually be reused. Here's what
+changed and why:
 
-## Architecture
+| Before | After | Why |
+|---|---|---|
+| Everything hardcoded in `main.tf` (region, AMI, type, key, name) | 6 input variables in `variables.tf` | Change the values in one place — the code becomes reusable |
+| No firewall — couldn't connect over SSH without setting it up by hand afterwards | A dedicated security group opening port 22, with a configurable CIDR | Access control, designed with security in mind |
+| No outputs — had to hunt for the public IP in the AWS console | `outputs.tf` prints the public IP and a ready-to-use SSH command | Terraform hands me everything at the end |
+| A single file | Three files split by responsibility (`variables.tf` · `main.tf` · `outputs.tf`) | Organization — each thing in its place |
 
-```
-Terraform → AWS Provider → Amazon EC2
-```
-
-## Resources Created
-
-- 1 Amazon EC2 instance
-- Region: us-east-1
-- Instance type: t2.micro
-- Amazon Linux 2
-- Key Pair: vockey
-
-## Project Structure
+## Project structure
 
 ```text
 terraform-aws-ec2-lab/
-├── main.tf
-├── .terraform.lock.hcl
+├── variables.tf   # inputs: region, AMI, instance type, key, name, allowed SSH CIDR
+├── main.tf        # resources: security group + EC2 instance
+├── outputs.tf     # outputs: instance ID, public IP, ready-to-use SSH command
 └── README.md
 ```
 
-## How to Run
+## A note on security
+
+I made the SSH CIDR configurable because this is a dynamic setup — it lets the
+code be reused in different ways. I keep it as `/32` on my own IP, which
+restricts access to a single machine (mine), so it works as my personal lab.
+From there I can adjust it as needed, following the principle of least
+privilege. `0.0.0.0/0` opens SSH to the whole internet and is only acceptable
+for a short-lived lab.
+
+## How to run
 
 ```bash
 terraform init      # initialize Terraform and download the AWS provider
@@ -52,15 +56,18 @@ terraform apply     # create the infrastructure
 terraform destroy   # remove the infrastructure (important for cost control)
 ```
 
-## To remember:
+After `apply`, Terraform prints the public IP and a ready-to-use SSH command
+from `outputs.tf` (Amazon Linux uses the `ec2-user` login).
 
-During this project I practiced:
+## What I learned
 
-- Infrastructure as Code (IaC) concepts
-- AWS Provider configuration
-- EC2 instance provisioning
-- Core Terraform commands
-- Basic AWS resource management
+I took variables — a concept I first learned in my Python classes — and used
+them here for something really important: making code reusable. Going from a
+fixed, one-off script to a parametrized, reusable setup was the real lesson of
+this refactor.
+
+*Renata C. — Cloud Computing career transition focused on AWS, Infrastructure,
+and DevOps practices.*
 
 ---
 
@@ -70,43 +77,45 @@ During this project I practiced:
 
 ### Visão Geral
 
-Este projeto foi desenvolvido como parte dos meus estudos em Computação em Nuvem
-e Infraestrutura como Código (IaC). O objetivo foi provisionar uma instância
-Amazon EC2 na AWS utilizando Terraform, automatizando a criação da
-infraestrutura por meio de código.
+Este projeto nasceu de uma curiosidade simples: em vez de criar toda a estrutura
+clicando na plataforma da AWS no laboratório, como seria fazer isso por código?
+Então fiz uma primeira versão bem simples, só para entender o processo de usar
+Infraestrutura como Código (IaC) — um assunto que me interessa aprender.
 
-### Tecnologias Utilizadas
+### A evolução — de código fixo a reutilizável
 
-- AWS EC2
-- Terraform
-- Linux
-- SSH
-- Git / GitHub
+Revisitando o projeto alguns meses depois, vi que ele não era só simples: não
+era reutilizável para nada — era um código fixo, preso no tempo. Então resolvi
+usar variáveis e transformá-lo em algo que possa ser aproveitado. O que mudou e
+por quê:
 
-### Arquitetura
+| Antes | Depois | Por quê |
+|---|---|---|
+| Tudo cravado no `main.tf` (região, AMI, tipo, key, nome) | 6 variáveis de entrada em `variables.tf` | Mudo os valores num lugar só — o código vira reutilizável |
+| Sem firewall — não dava pra conectar por SSH sem configurar na mão depois | Um security group dedicado abrindo a porta 22, com CIDR configurável | Controle de acesso, pensado com segurança |
+| Sem outputs — precisava caçar o IP público no console | `outputs.tf` imprime o IP público e o comando SSH pronto | O Terraform já me entrega tudo no final |
+| Um arquivo só | Três arquivos separados por responsabilidade (`variables.tf` · `main.tf` · `outputs.tf`) | Organização — cada coisa no seu lugar |
 
-```
-Terraform → AWS Provider → Amazon EC2
-```
-
-### Recursos Criados
-
-- 1 instância Amazon EC2
-- Região: us-east-1
-- Tipo de instância: t2.micro
-- Amazon Linux 2
-- Key Pair: vockey
-
-### Estrutura do Projeto
+### Estrutura do projeto
 
 ```text
 terraform-aws-ec2-lab/
-├── main.tf
-├── .terraform.lock.hcl
+├── variables.tf   # entradas: região, AMI, tipo, key, nome, CIDR liberado para SSH
+├── main.tf        # recursos: security group + instância EC2
+├── outputs.tf     # saídas: ID da instância, IP público, comando SSH pronto
 └── README.md
 ```
 
-### Como Executar
+### Uma nota sobre segurança
+
+Deixei o CIDR do SSH configurável porque essa é uma estrutura dinâmica — permite
+que o código seja reutilizado de várias maneiras. Eu mantenho `/32` no meu
+próprio IP, o que restringe o acesso a uma única máquina (a minha), então
+funciona como meu laboratório pessoal. A partir daí posso ajustar conforme a
+necessidade, seguindo o conceito de menor privilégio. O `0.0.0.0/0` abre o SSH
+para a internet inteira e só é aceitável para um lab de curta duração.
+
+### Como executar
 
 ```bash
 terraform init      # inicializa o Terraform e baixa o provider da AWS
@@ -115,12 +124,15 @@ terraform apply     # cria a infraestrutura
 terraform destroy   # remove a infraestrutura (importante para controle de custos)
 ```
 
-### Para guardar:
+Após o `apply`, o Terraform imprime o IP público e um comando SSH pronto (o
+`outputs.tf`). No Amazon Linux, o usuário de login é `ec2-user`.
 
-Durante este projeto pratiquei:
+### O que eu aprendi
 
-- Conceitos de Infraestrutura como Código (IaC)
-- Configuração do Provider AWS
-- Provisionamento de instâncias EC2
-- Utilização dos comandos principais do Terraform
-- Gerenciamento básico de recursos na AWS
+Peguei variáveis — um conceito que aprendi nas minhas aulas de Python — e usei
+aqui para algo muito importante: deixar o código reutilizável. Sair de um script
+fixo, de uso único, para uma estrutura parametrizada e reaproveitável foi o
+verdadeiro aprendizado dessa refatoração.
+
+*Renata C. — Profissional em transição de carreira para Cloud Computing, com
+foco em AWS, Infraestrutura e práticas de DevOps.*
