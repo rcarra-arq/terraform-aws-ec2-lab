@@ -8,16 +8,43 @@ terraform {
 }
 
 provider "aws" {
-  region = "us-east-1"
+  region = var.aws_region
+}
+
+# Security group allowing inbound SSH (port 22) and all outbound traffic.
+# Created in the account's default VPC.
+resource "aws_security_group" "ssh" {
+  name        = "${var.instance_name}-ssh"
+  description = "Allow SSH inbound access"
+
+  ingress {
+    description = "SSH from allowed CIDR"
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = [var.ssh_allowed_cidr]
+  }
+
+  egress {
+    description = "Allow all outbound traffic"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "${var.instance_name}-ssh"
+  }
 }
 
 resource "aws_instance" "demo" {
-  ami           = "ami-0c02fb55956c7d316" # Amazon Linux 2 (us-east-1)
-  instance_type = "t2.micro"
-
-  key_name = "vockey"
+  ami                    = var.ami_id
+  instance_type          = var.instance_type
+  key_name               = var.key_name
+  vpc_security_group_ids = [aws_security_group.ssh.id]
 
   tags = {
-    Name = "terraform-demo"
+    Name = var.instance_name
   }
 }

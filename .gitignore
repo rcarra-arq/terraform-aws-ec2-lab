@@ -1,0 +1,20 @@
+# Terraform provider cache and plugins (large, machine-specific, rebuilt by `terraform init`)
+.terraform/
+.terraform.tfstate.lock.info
+
+# State files — may contain sensitive values, never commit
+*.tfstate
+*.tfstate.*
+
+# Variable files that may hold secrets or per-user values
+*.tfvars
+*.tfvars.json
+
+# Crash logs and CLI config
+crash.log
+crash.*.log
+.terraformrc
+terraform.rc
+
+# Keys — never commit private keys
+*.pem
