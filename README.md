@@ -4,15 +4,80 @@
 
 # AWS EC2 Terraform Project
 
-**🇺🇸 English** · [🇧🇷 Português](#português)
-
-## Overview
+Este projeto nasceu de uma curiosidade simples: em vez de criar toda a estrutura
+clicando na plataforma da AWS no laboratório, como seria fazer isso por código?
+Então fiz uma primeira versão bem simples, só para entender o processo de usar
+Infraestrutura como Código (IaC) — um assunto que me interessa aprender.
 
 This project started from a simple curiosity: instead of building everything by
-clicking through the AWS console in the lab, what would it be like to do it in
-code? So I built a first, deliberately minimal version — just to understand the
-process of working with Infrastructure as Code (IaC), a topic I'm genuinely
-interested in learning.
+clicking through the AWS console, what would it be like to do it in code? I built
+a first, deliberately minimal version, then refactored it to be reusable and
+secure.
+
+🇺🇸 [Full version in English ↓](#english)
+
+## Português
+
+## A evolução — de código fixo a reutilizável
+
+Revisitando o projeto alguns meses depois, vi que ele não era só simples: não
+era reutilizável para nada — era um código fixo, preso no tempo. Então resolvi
+usar variáveis e transformá-lo em algo que possa ser aproveitado. O que mudou e
+por quê:
+
+| Antes | Depois | Por quê |
+|---|---|---|
+| Tudo cravado no `main.tf` (região, AMI, tipo, key, nome) | 6 variáveis de entrada em `variables.tf` | Mudo os valores num lugar só — o código vira reutilizável |
+| Sem firewall — não dava pra conectar por SSH sem configurar na mão depois | Um security group dedicado abrindo a porta 22, com CIDR configurável | Controle de acesso, pensado com segurança |
+| Sem outputs — precisava caçar o IP público no console | `outputs.tf` imprime o IP público e o comando SSH pronto | O Terraform já me entrega tudo no final |
+| Um arquivo só | Três arquivos separados por responsabilidade (`variables.tf` · `main.tf` · `outputs.tf`) | Organização — cada coisa no seu lugar |
+
+## Estrutura do projeto
+
+```text
+terraform-aws-ec2-lab/
+├── variables.tf   # entradas: região, AMI, tipo, key, nome, CIDR liberado para SSH
+├── main.tf        # recursos: security group + instância EC2
+├── outputs.tf     # saídas: ID da instância, IP público, comando SSH pronto
+└── README.md
+```
+
+## Uma nota sobre segurança
+
+Deixei o CIDR do SSH configurável porque essa é uma estrutura dinâmica — permite
+que o código seja reutilizado de várias maneiras. Eu mantenho `/32` no meu
+próprio IP, o que restringe o acesso a uma única máquina (a minha), então
+funciona como meu laboratório pessoal. A partir daí posso ajustar conforme a
+necessidade, seguindo o conceito de menor privilégio. O `0.0.0.0/0` abre o SSH
+para a internet inteira e só é aceitável para um lab de curta duração.
+
+## Como executar
+
+```bash
+terraform init      # inicializa o Terraform e baixa o provider da AWS
+terraform plan      # visualiza o plano de execução
+terraform apply     # cria a infraestrutura
+terraform destroy   # remove a infraestrutura (importante para controle de custos)
+```
+
+Após o `apply`, o Terraform imprime o IP público e um comando SSH pronto (o
+`outputs.tf`). No Amazon Linux, o usuário de login é `ec2-user`.
+
+## O que eu aprendi
+
+Peguei variáveis — um conceito que aprendi nas minhas aulas de Python — e usei
+aqui para algo muito importante: deixar o código reutilizável. Sair de um script
+fixo, de uso único, para uma estrutura parametrizada e reaproveitável foi o
+verdadeiro aprendizado dessa refatoração.
+
+*Renata C. — Profissional em transição de carreira para Cloud Computing, com
+foco em AWS, Infraestrutura e práticas de DevOps.*
+
+---
+
+## English
+
+🇧🇷 [Versão em português ↑](#aws-ec2-terraform-project)
 
 ## The evolution — from hardcoded to reusable
 
@@ -68,71 +133,3 @@ this refactor.
 
 *Renata C. — Cloud Computing career transition focused on AWS, Infrastructure,
 and DevOps practices.*
-
----
-
-## Português
-
-[🇺🇸 English ⬆](#aws-ec2-terraform-project)
-
-### Visão Geral
-
-Este projeto nasceu de uma curiosidade simples: em vez de criar toda a estrutura
-clicando na plataforma da AWS no laboratório, como seria fazer isso por código?
-Então fiz uma primeira versão bem simples, só para entender o processo de usar
-Infraestrutura como Código (IaC) — um assunto que me interessa aprender.
-
-### A evolução — de código fixo a reutilizável
-
-Revisitando o projeto alguns meses depois, vi que ele não era só simples: não
-era reutilizável para nada — era um código fixo, preso no tempo. Então resolvi
-usar variáveis e transformá-lo em algo que possa ser aproveitado. O que mudou e
-por quê:
-
-| Antes | Depois | Por quê |
-|---|---|---|
-| Tudo cravado no `main.tf` (região, AMI, tipo, key, nome) | 6 variáveis de entrada em `variables.tf` | Mudo os valores num lugar só — o código vira reutilizável |
-| Sem firewall — não dava pra conectar por SSH sem configurar na mão depois | Um security group dedicado abrindo a porta 22, com CIDR configurável | Controle de acesso, pensado com segurança |
-| Sem outputs — precisava caçar o IP público no console | `outputs.tf` imprime o IP público e o comando SSH pronto | O Terraform já me entrega tudo no final |
-| Um arquivo só | Três arquivos separados por responsabilidade (`variables.tf` · `main.tf` · `outputs.tf`) | Organização — cada coisa no seu lugar |
-
-### Estrutura do projeto
-
-```text
-terraform-aws-ec2-lab/
-├── variables.tf   # entradas: região, AMI, tipo, key, nome, CIDR liberado para SSH
-├── main.tf        # recursos: security group + instância EC2
-├── outputs.tf     # saídas: ID da instância, IP público, comando SSH pronto
-└── README.md
-```
-
-### Uma nota sobre segurança
-
-Deixei o CIDR do SSH configurável porque essa é uma estrutura dinâmica — permite
-que o código seja reutilizado de várias maneiras. Eu mantenho `/32` no meu
-próprio IP, o que restringe o acesso a uma única máquina (a minha), então
-funciona como meu laboratório pessoal. A partir daí posso ajustar conforme a
-necessidade, seguindo o conceito de menor privilégio. O `0.0.0.0/0` abre o SSH
-para a internet inteira e só é aceitável para um lab de curta duração.
-
-### Como executar
-
-```bash
-terraform init      # inicializa o Terraform e baixa o provider da AWS
-terraform plan      # visualiza o plano de execução
-terraform apply     # cria a infraestrutura
-terraform destroy   # remove a infraestrutura (importante para controle de custos)
-```
-
-Após o `apply`, o Terraform imprime o IP público e um comando SSH pronto (o
-`outputs.tf`). No Amazon Linux, o usuário de login é `ec2-user`.
-
-### O que eu aprendi
-
-Peguei variáveis — um conceito que aprendi nas minhas aulas de Python — e usei
-aqui para algo muito importante: deixar o código reutilizável. Sair de um script
-fixo, de uso único, para uma estrutura parametrizada e reaproveitável foi o
-verdadeiro aprendizado dessa refatoração.
-
-*Renata C. — Profissional em transição de carreira para Cloud Computing, com
-foco em AWS, Infraestrutura e práticas de DevOps.*
