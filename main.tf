@@ -16,9 +16,9 @@ provider "aws" {
 # The two inbound rules answer different questions on purpose: SSH is for the
 # operator alone and should be locked to a single address, while HTTP is for
 # visitors and is meant to be open. Hence two separate CIDR variables.
-resource "aws_security_group" "ssh" {
-  name        = "${var.instance_name}-ssh"
-  description = "Allow SSH inbound access"
+resource "aws_security_group" "instance" {
+  name        = "${var.instance_name}-sg"
+  description = "Allow inbound SSH and HTTP, plus all outbound traffic"
 
   ingress {
     description = "SSH from allowed CIDR"
@@ -35,6 +35,7 @@ resource "aws_security_group" "ssh" {
     protocol    = "tcp"
     cidr_blocks = [var.http_allowed_cidr]
   }
+
   egress {
     description = "Allow all outbound traffic"
     from_port   = 0
@@ -44,7 +45,7 @@ resource "aws_security_group" "ssh" {
   }
 
   tags = {
-    Name = "${var.instance_name}-ssh"
+    Name = "${var.instance_name}-sg"
   }
 }
 
@@ -52,7 +53,7 @@ resource "aws_instance" "demo" {
   ami                    = var.ami_id
   instance_type          = var.instance_type
   key_name               = var.key_name
-  vpc_security_group_ids = [aws_security_group.ssh.id]
+  vpc_security_group_ids = [aws_security_group.instance.id]
 
   tags = {
     Name = var.instance_name
