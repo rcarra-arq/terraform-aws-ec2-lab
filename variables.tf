@@ -33,3 +33,10 @@ variable "ssh_allowed_cidr" {
   type        = string
   default     = "0.0.0.0/0"
 }
+}
+
+variable "http_allowed_cidr" {
+  description = "CIDR block allowed to reach the instance over SSH. Use your own IP (e.g. 203.0.113.10/32) in real use; 0.0.0.0/0 opens SSH to the whole internet and is only acceptable for a short-lived lab."
+  type        = string
+  default     = "0.0.0.0/0"
+}
