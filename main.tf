@@ -29,7 +29,7 @@ resource "aws_security_group" "ssh" {
     from_port   = 80
     to_port     = 80
     protocol    = "tcp"
-    cidr_blocks = [var.ssh_allowed_cidr2]
+    cidr_blocks = [var.http_allowed_cidr]
   }
   egress {
     description = "Allow all outbound traffic"
