@@ -33,9 +33,3 @@ variable "ssh_allowed_cidr" {
   type        = string
   default     = "203.0.113.10/32"
 }
-
-variable "http_allowed_cidr" {
-  description = "CIDR block allowed to reach the instance over HTTP (port 80). Unlike SSH, this one is meant to be public: a web server only its owner can reach serves no purpose, so 0.0.0.0/0 is the correct value here rather than a compromise."
-  type        = string
-  default     = "0.0.0.0/0"
-}
