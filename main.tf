@@ -11,8 +11,11 @@ provider "aws" {
   region = var.aws_region
 }
 
-# Security group allowing inbound SSH (port 22) and all outbound traffic.
-# Created in the account's default VPC.
+# Security group allowing inbound SSH (port 22), inbound HTTP (port 80) and
+# all outbound traffic. Created in the account's default VPC.
+# The two inbound rules answer different questions on purpose: SSH is for the
+# operator alone and should be locked to a single address, while HTTP is for
+# visitors and is meant to be open. Hence two separate CIDR variables.
 resource "aws_security_group" "ssh" {
   name        = "${var.instance_name}-ssh"
   description = "Allow SSH inbound access"
@@ -24,8 +27,9 @@ resource "aws_security_group" "ssh" {
     protocol    = "tcp"
     cidr_blocks = [var.ssh_allowed_cidr]
   }
+
   ingress {
-    description = "allow porta 80"
+    description = "HTTP from allowed CIDR"
     from_port   = 80
     to_port     = 80
     protocol    = "tcp"

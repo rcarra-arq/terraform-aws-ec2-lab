@@ -1,0 +1,18 @@
+# Copy this file to terraform.tfvars and fill in your own values.
+# terraform.tfvars is gitignored, so what you put there never reaches GitHub.
+#
+#   cp terraform.tfvars.example terraform.tfvars
+#
+# Find your current public IP with:
+#
+#   curl -s https://checkip.amazonaws.com
+#
+# Then append /32, which means "this exact address and no other".
+# The value below is from the RFC 5737 documentation range and belongs to
+# nobody - it is a placeholder, not a working value.
+ssh_allowed_cidr = "203.0.113.10/32"
+
+# HTTP is meant to be reachable by anyone, so the default 0.0.0.0/0 in
+# variables.tf is already correct. Override it only if you want to keep the
+# web server private while testing.
+# http_allowed_cidr = "203.0.113.10/32"

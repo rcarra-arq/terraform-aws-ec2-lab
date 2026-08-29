@@ -29,14 +29,13 @@ variable "instance_name" {
 }
 
 variable "ssh_allowed_cidr" {
-  description = "CIDR block allowed to reach the instance over SSH. Use your own IP (e.g. 203.0.113.10/32) in real use; 0.0.0.0/0 opens SSH to the whole internet and is only acceptable for a short-lived lab."
+  description = "CIDR block allowed to reach the instance over SSH (port 22). Only the operator needs this, so keep it to a single address with /32. The default is the RFC 5737 documentation range, which belongs to nobody: applying without overriding it builds a security group that lets no one in, instead of one open to the whole internet. Set your real IP in a gitignored terraform.tfvars - see terraform.tfvars.example."
   type        = string
-  default     = "0.0.0.0/0"
-}
+  default     = "203.0.113.10/32"
 }
 
 variable "http_allowed_cidr" {
-  description = "CIDR block allowed to reach the instance over SSH. Use your own IP (e.g. 203.0.113.10/32) in real use; 0.0.0.0/0 opens SSH to the whole internet and is only acceptable for a short-lived lab."
+  description = "CIDR block allowed to reach the instance over HTTP (port 80). Unlike SSH, this one is meant to be public: a web server only its owner can reach serves no purpose, so 0.0.0.0/0 is the correct value here rather than a compromise."
   type        = string
   default     = "0.0.0.0/0"
 }

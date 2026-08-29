@@ -27,8 +27,8 @@ por quê:
 
 | Antes | Depois | Por quê |
 |---|---|---|
-| Tudo cravado no `main.tf` (região, AMI, tipo, key, nome) | 6 variáveis de entrada em `variables.tf` | Mudo os valores num lugar só — o código vira reutilizável |
-| Sem firewall — não dava pra conectar por SSH sem configurar na mão depois | Um security group dedicado abrindo a porta 22, com CIDR configurável | Controle de acesso, pensado com segurança |
+| Tudo cravado no `main.tf` (região, AMI, tipo, key, nome) | 7 variáveis de entrada em `variables.tf` | Mudo os valores num lugar só — o código vira reutilizável |
+| Sem firewall — não dava pra conectar por SSH sem configurar na mão depois | Um security group dedicado abrindo a porta 22 (SSH) e a 80 (HTTP), com um CIDR configurável para cada uma | Controle de acesso — e cada porta com a sua própria regra, porque as duas não têm o mesmo público |
 | Sem outputs — precisava caçar o IP público no console | `outputs.tf` imprime o IP público e o comando SSH pronto | O Terraform já me entrega tudo no final |
 | Um arquivo só | Três arquivos separados por responsabilidade (`variables.tf` · `main.tf` · `outputs.tf`) | Organização — cada coisa no seu lugar |
 
@@ -36,24 +36,44 @@ por quê:
 
 ```text
 terraform-aws-ec2-lab/
-├── variables.tf   # entradas: região, AMI, tipo, key, nome, CIDR liberado para SSH
-├── main.tf        # recursos: security group + instância EC2
-├── outputs.tf     # saídas: ID da instância, IP público, comando SSH pronto
+├── variables.tf              # entradas: região, AMI, tipo, key, nome, CIDRs de SSH e HTTP
+├── main.tf                   # recursos: security group + instância EC2
+├── outputs.tf                # saídas: ID da instância, IP público, comando SSH pronto
+├── terraform.tfvars.example  # modelo dos valores locais (o arquivo real fica no gitignore)
 └── README.md
 ```
 
 ## Uma nota sobre segurança
 
-Deixei o CIDR do SSH configurável porque essa é uma estrutura dinâmica — permite
-que o código seja reutilizado de várias maneiras. Eu mantenho `/32` no meu
-próprio IP, o que restringe o acesso a uma única máquina (a minha), então
-funciona como meu laboratório pessoal. A partir daí posso ajustar conforme a
-necessidade, seguindo o conceito de menor privilégio. O `0.0.0.0/0` abre o SSH
-para a internet inteira e só é aceitável para um lab de curta duração.
+São dois CIDRs configuráveis, e eles respondem a perguntas diferentes. Entender
+essa diferença foi o principal aprendizado desta versão.
+
+O **SSH (porta 22)** é o acesso de administração — só eu preciso dele. Então o
+valor certo é o meu próprio IP com `/32`, que significa "exatamente este
+endereço, mais nenhum": é o princípio do menor privilégio aplicado a uma regra
+de firewall. O default no `variables.tf` é `203.0.113.10/32`, um endereço da
+faixa que a RFC 5737 reserva para documentação e que não pertence a ninguém.
+Isso é proposital: se alguém rodar `terraform apply` sem configurar nada, o
+security group criado não deixa *ninguém* entrar, em vez de deixar entrar *todo
+mundo*. Prefiro que ele falhe fechado.
+
+O **HTTP (porta 80)** é o oposto. Ele existe para ser alcançado por qualquer
+visitante, então `0.0.0.0/0` aqui é a resposta correta, não uma concessão — um
+servidor web que só o dono alcança não serve para nada.
+
+A lição é que `0.0.0.0/0` não é errado por si só. Errado é repetir o mesmo valor
+nas duas portas por inércia, sem perguntar quem precisa de cada uma.
+
+Detalhe importante: meu IP real nunca entra no repositório. Ele fica num
+`terraform.tfvars` local, bloqueado pelo `.gitignore`; o
+`terraform.tfvars.example`, esse sim versionado, mostra apenas o formato.
 
 ## Como executar
 
 ```bash
+curl -s https://checkip.amazonaws.com          # descubro meu IP público atual
+cp terraform.tfvars.example terraform.tfvars   # e coloco esse IP + /32 no arquivo
+
 terraform init      # inicializa o Terraform e baixa o provider da AWS
 terraform plan      # visualiza o plano de execução
 terraform apply     # cria a infraestrutura
@@ -88,8 +108,8 @@ changed and why:
 
 | Before | After | Why |
 |---|---|---|
-| Everything hardcoded in `main.tf` (region, AMI, type, key, name) | 6 input variables in `variables.tf` | Change the values in one place — the code becomes reusable |
-| No firewall — couldn't connect over SSH without setting it up by hand afterwards | A dedicated security group opening port 22, with a configurable CIDR | Access control, designed with security in mind |
+| Everything hardcoded in `main.tf` (region, AMI, type, key, name) | 7 input variables in `variables.tf` | Change the values in one place — the code becomes reusable |
+| No firewall — couldn't connect over SSH without setting it up by hand afterwards | A dedicated security group opening port 22 (SSH) and port 80 (HTTP), each with its own configurable CIDR | Access control — and one rule per port, because the two don't have the same audience |
 | No outputs — had to hunt for the public IP in the AWS console | `outputs.tf` prints the public IP and a ready-to-use SSH command | Terraform hands me everything at the end |
 | A single file | Three files split by responsibility (`variables.tf` · `main.tf` · `outputs.tf`) | Organization — each thing in its place |
 
@@ -97,24 +117,43 @@ changed and why:
 
 ```text
 terraform-aws-ec2-lab/
-├── variables.tf   # inputs: region, AMI, instance type, key, name, allowed SSH CIDR
-├── main.tf        # resources: security group + EC2 instance
-├── outputs.tf     # outputs: instance ID, public IP, ready-to-use SSH command
+├── variables.tf              # inputs: region, AMI, instance type, key, name, SSH and HTTP CIDRs
+├── main.tf                   # resources: security group + EC2 instance
+├── outputs.tf                # outputs: instance ID, public IP, ready-to-use SSH command
+├── terraform.tfvars.example  # template for local values (the real file is gitignored)
 └── README.md
 ```
 
 ## A note on security
 
-I made the SSH CIDR configurable because this is a dynamic setup — it lets the
-code be reused in different ways. I keep it as `/32` on my own IP, which
-restricts access to a single machine (mine), so it works as my personal lab.
-From there I can adjust it as needed, following the principle of least
-privilege. `0.0.0.0/0` opens SSH to the whole internet and is only acceptable
-for a short-lived lab.
+There are two configurable CIDRs, and they answer different questions.
+Understanding that difference was the main lesson of this version.
+
+**SSH (port 22)** is admin access — I'm the only one who needs it. So the right
+value is my own IP with `/32`, which means "this exact address and no other":
+least privilege applied to a firewall rule. The default in `variables.tf` is
+`203.0.113.10/32`, an address from the range RFC 5737 reserves for
+documentation, which belongs to nobody. That is deliberate: if someone runs
+`terraform apply` without configuring anything, the resulting security group
+lets *no one* in rather than letting *everyone* in. I'd rather it fail closed.
+
+**HTTP (port 80)** is the opposite. It exists to be reached by any visitor, so
+`0.0.0.0/0` is the correct answer here, not a compromise — a web server only its
+owner can reach is useless.
+
+The lesson is that `0.0.0.0/0` isn't wrong in itself. What's wrong is repeating
+the same value on both ports out of habit, without asking who needs each one.
+
+One detail that matters: my real IP never enters the repository. It lives in a
+local `terraform.tfvars` blocked by `.gitignore`, while the committed
+`terraform.tfvars.example` shows only the format.
 
 ## How to run
 
 ```bash
+curl -s https://checkip.amazonaws.com          # find my current public IP
+cp terraform.tfvars.example terraform.tfvars   # then put that IP + /32 in the file
+
 terraform init      # initialize Terraform and download the AWS provider
 terraform plan      # review the execution plan
 terraform apply     # create the infrastructure
